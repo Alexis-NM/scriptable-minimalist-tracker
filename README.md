@@ -2,7 +2,7 @@
 
 ## Project Description
 
-Minimalist Habit Tracker is an iOS widget script built with Scriptable that enables you to set up, customize, and track a single daily habit using a GitHub-style 3×12 grid interface. Featuring theme selection, interactive daily check-ins, and secure storage via Keychain, it's a lightweight and flexible solution to visualize your habit progress directly on your home screen.
+Minimalist Habit Tracker is an iOS widget script built with Scriptable that enables you to set up, customize, and track a single daily habit using a GitHub-style grid interface. Featuring theme selection, interactive daily check-ins, and secure storage via Keychain, it's a lightweight and flexible solution to visualize your habit progress directly on your home screen.
 
 ---
 
@@ -31,7 +31,7 @@ Minimalist Habit Tracker is an iOS widget script built with Scriptable that enab
    - **Check-in**: toggle today's entry.
    - **Settings**: change theme, change habit, or reset all tracked data.
 3. **Home Screen**:
-   - Medium widget displays habit name and 3×12 grid:
+   - Medium widget displays habit name and the grid:
      - **Green** squares: days checked in.
      - **Gray** squares: days not checked or beyond current month.
 
