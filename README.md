@@ -39,10 +39,10 @@ Minimalist Habit Tracker is an iOS widget script built with Scriptable that enab
 
 ## Screenshots
 
-![Light Theme Example](path/to/light-theme.png)  
+![Light Theme Example](screenshots/light_tracker.jpg)  
 Light theme displaying the habit grid.
 
-![Dark Theme Example](path/to/dark-theme.png)  
+![Dark Theme Example](screenshots/dark_tracker.jpg)  
 Dark theme displaying the habit grid.
 
 ---
