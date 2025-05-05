@@ -1,6 +1,6 @@
 /*
  * Single Habit Tracker for Scriptable
- * Theme & habit setup, then 3×12 grid for daily check-ins.
+ * Interactive settings and daily check-in with a 3×12 grid.
  */
 
 const THEME_KEY = "habitTrackerTheme";
@@ -12,32 +12,24 @@ const ROWS = 3;
 const COLS = 12;
 const CORNER_RADIUS = 4;
 
-/**
- * formatDate: Returns date as YYYY-MM-DD string
- */
+/** Returns date as YYYY-MM-DD */
 function formatDate(date) {
   return date.toISOString().slice(0, 10);
 }
 
-/**
- * daysInMonth: Returns the number of days in the specified month
- */
+/** Returns number of days in given month/year */
 function daysInMonth(month, year) {
   return new Date(year, month, 0).getDate();
 }
 
-/**
- * getCellSize: Calculates square size to fill medium widget width
- */
+/** Calculates cell size to fill medium widget width */
 function getCellSize() {
   const totalWidth = 364 - 2 * PADDING;
   const usable = totalWidth - (COLS - 1) * SPACING;
   return Math.floor(usable / COLS);
 }
 
-/**
- * loadThemeName: Retrieves the theme ('dark' or 'light') from Keychain
- */
+/** Load theme ('dark'/'light') from Keychain */
 function loadThemeName() {
   try {
     return Keychain.get(THEME_KEY) || null;
@@ -46,18 +38,14 @@ function loadThemeName() {
   }
 }
 
-/**
- * saveThemeName: Saves the theme to Keychain
- */
+/** Save theme to Keychain */
 function saveThemeName(name) {
   try {
     Keychain.set(THEME_KEY, name);
   } catch (e) {}
 }
 
-/**
- * promptForTheme: Prompts user to choose Dark or Light theme on first run
- */
+/** Prompt for Dark/Light theme first run */
 async function promptForTheme() {
   const alert = new Alert();
   alert.title = "Choose theme";
@@ -76,9 +64,7 @@ async function promptForTheme() {
   return null;
 }
 
-/**
- * loadHabitName: Retrieves the habit name from Keychain (lowercase)
- */
+/** Load habit name from Keychain (lowercase) */
 function loadHabitName() {
   try {
     const n = Keychain.get(HABIT_KEY);
@@ -88,18 +74,14 @@ function loadHabitName() {
   }
 }
 
-/**
- * saveHabitName: Saves the habit name to Keychain in lowercase
- */
+/** Save habit name to Keychain in lowercase */
 function saveHabitName(name) {
   try {
     Keychain.set(HABIT_KEY, name.toLowerCase());
   } catch (e) {}
 }
 
-/**
- * promptForHabit: Prompts user to enter the habit name on first run
- */
+/** Prompt for habit name first run */
 async function promptForHabit() {
   const alert = new Alert();
   alert.title = "What do you want to track?";
@@ -117,9 +99,7 @@ async function promptForHabit() {
   return null;
 }
 
-/**
- * loadDates: Loads the list of tracked dates from Keychain
- */
+/** Load tracked dates array from Keychain */
 function loadDates() {
   try {
     const r = Keychain.get(STORAGE_KEY);
@@ -129,18 +109,14 @@ function loadDates() {
   }
 }
 
-/**
- * saveDates: Saves the list of tracked dates to Keychain
- */
+/** Save tracked dates array to Keychain */
 function saveDates(arr) {
   try {
     Keychain.set(STORAGE_KEY, JSON.stringify(arr));
   } catch (e) {}
 }
 
-/**
- * createWidget: Builds the ListWidget with title, theme, and 3×12 grid
- */
+/** Build ListWidget with title, theme, and 3x12 grid */
 function createWidget(habitName, dates, theme) {
   const widget = new ListWidget();
   widget.setPadding(PADDING, PADDING, PADDING, PADDING);
@@ -180,8 +156,8 @@ function createWidget(habitName, dates, theme) {
   return widget;
 }
 
+// Main Execution
 if (config.runsInApp) {
-  // Theme selection and saving
   let theme = loadThemeName();
   if (!theme) {
     theme = await promptForTheme();
@@ -190,7 +166,6 @@ if (config.runsInApp) {
       return;
     }
   }
-  // Habit name selection and saving
   let habit = loadHabitName();
   if (!habit) {
     habit = await promptForHabit();
@@ -199,25 +174,56 @@ if (config.runsInApp) {
       return;
     }
   }
-  // Toggle today's date
-  const dates = loadDates();
-  const today = formatDate(new Date());
-  const i = dates.indexOf(today);
-  if (i >= 0) dates.splice(i, 1);
-  else dates.push(today);
-  saveDates(dates);
-  // Confirmation alert
-  const alert = new Alert();
-  alert.title = habit;
-  alert.message =
-    i >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
-  alert.addAction("OK");
-  await alert.presentAlert();
-  // Preview widget
-  await createWidget(habit, dates, theme).presentMedium();
+
+  const mainAlert = new Alert();
+  mainAlert.title = habit;
+  mainAlert.addAction("Check-in");
+  mainAlert.addAction("Settings");
+  mainAlert.addCancelAction("Cancel");
+  const action = await mainAlert.presentSheet();
+
+  let dates = loadDates();
+  if (action === 0) {
+    const today = formatDate(new Date());
+    const i = dates.indexOf(today);
+    if (i >= 0) dates.splice(i, 1);
+    else dates.push(today);
+    saveDates(dates);
+    const a = new Alert();
+    a.title = habit;
+    a.message = i >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
+    a.addAction("OK");
+    await a.presentAlert();
+  } else if (action === 1) {
+    const s = new Alert();
+    s.title = "Settings";
+    s.addAction("Change Theme");
+    s.addAction("Change Habit");
+    s.addAction("Reset Data");
+    s.addCancelAction("Cancel");
+    const choice = await s.presentSheet();
+    if (choice === 0) {
+      const newTheme = await promptForTheme();
+      if (newTheme) theme = newTheme;
+    } else if (choice === 1) {
+      const newHabit = await promptForHabit();
+      if (newHabit) habit = newHabit;
+    } else if (choice === 2) {
+      dates = [];
+      saveDates(dates);
+    } else {
+      Script.complete();
+      return;
+    }
+  } else {
+    Script.complete();
+    return;
+  }
+
+  const w = createWidget(habit, dates, theme);
+  await w.presentMedium();
   Script.complete();
 } else {
-  // Render on home screen
   const theme = loadThemeName() || "light";
   const habit = loadHabitName() || "habit";
   const dates = loadDates();
