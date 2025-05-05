@@ -1,9 +1,8 @@
 /*
  * Single Habit Tracker for Scriptable
- * Interactive settings and daily check-in with a 3×12 grid.
+ * Interactive settings and daily check-in with a dynamic 3×N grid per month.
  */
 
-// Keychain keys and layout configuration
 const KEYS = {
   theme: "habitTrackerTheme",
   habit: "habitTrackerName",
@@ -13,12 +12,10 @@ const CONFIG = {
   padding: 8,
   spacing: 3,
   rows: 3,
-  cols: 12,
   cornerRadius: 4,
   widgetWidth: 364,
 };
 
-// --- Keychain Helpers ---------------------------------------------------
 function loadKey(name) {
   try {
     return Keychain.get(KEYS[name]) || null;
@@ -31,24 +28,10 @@ function saveKey(name, value) {
     Keychain.set(KEYS[name], value);
   } catch {}
 }
-function removeKey(name) {
-  try {
-    Keychain.remove(KEYS[name]);
-  } catch {}
-}
 
-// --- Date Utilities ------------------------------------------------------
 const formatDate = (date) => date.toISOString().slice(0, 10);
 const daysInMonth = (month, year) => new Date(year, month, 0).getDate();
-const getCellSize = () => {
-  const usable =
-    CONFIG.widgetWidth -
-    2 * CONFIG.padding -
-    (CONFIG.cols - 1) * CONFIG.spacing;
-  return Math.floor(usable / CONFIG.cols);
-};
 
-// --- Prompt Utilities ----------------------------------------------------
 async function promptChoice(title, message, options) {
   const alert = new Alert();
   alert.title = title;
@@ -68,7 +51,6 @@ async function promptInput(title, placeholder) {
   return idx === 0 ? alert.textFieldValue(0).trim() : null;
 }
 
-// --- Ensure Settings -----------------------------------------------------
 async function ensureTheme() {
   let theme = loadKey("theme");
   if (!theme) {
@@ -78,8 +60,8 @@ async function ensureTheme() {
       ["dark", "light"]
     );
     if (choice) {
+      saveKey("theme", choice);
       theme = choice;
-      saveKey("theme", theme);
     }
   }
   return theme;
@@ -89,14 +71,13 @@ async function ensureHabit() {
   if (!habit) {
     const name = await promptInput("What do you want to track?", "habit name");
     if (name) {
+      saveKey("habit", name.toLowerCase());
       habit = name.toLowerCase();
-      saveKey("habit", habit);
     }
   }
   return habit;
 }
 
-// --- Data Management -----------------------------------------------------
 function loadDates() {
   try {
     const raw = Keychain.get(KEYS.dates);
@@ -105,53 +86,53 @@ function loadDates() {
     return [];
   }
 }
-function saveDates(dates) {
+function saveDates(arr) {
   try {
-    Keychain.set(KEYS.dates, JSON.stringify(dates));
+    Keychain.set(KEYS.dates, JSON.stringify(arr));
   } catch {}
 }
-async function resetData() {
-  saveDates([]);
-}
 
-// --- Widget Builder ------------------------------------------------------
 function createWidget(habit, dates, theme) {
   const widget = new ListWidget();
   widget.setPadding(
     CONFIG.padding,
-    CONFIG.padding,
+    CONFIG.padding + 3,
     CONFIG.padding,
     CONFIG.padding
   );
   widget.backgroundColor =
     theme === "dark" ? new Color("#242424") : new Color("#FFFFFF");
 
-  // Title
   const title = widget.addText(habit);
   title.font = Font.boldSystemFont(16);
   title.textColor = theme === "dark" ? Color.white() : Color.black();
   title.leftAlignText();
-  widget.addSpacer(4);
+  widget.addSpacer(CONFIG.spacing);
 
-  // Grid
-  const year = new Date().getFullYear();
-  const month = new Date().getMonth() + 1;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
   const totalDays = daysInMonth(month, year);
-  const size = getCellSize();
+
+  const cols = Math.ceil(totalDays / CONFIG.rows);
+  const lastRowCount = totalDays - (CONFIG.rows - 1) * cols;
+  const cellSize = Math.floor(
+    (CONFIG.widgetWidth - 2 * CONFIG.padding - (cols - 1) * CONFIG.spacing) /
+      cols
+  );
 
   for (let r = 0; r < CONFIG.rows; r++) {
     const row = widget.addStack();
     row.layoutHorizontally();
-    for (let c = 0; c < CONFIG.cols; c++) {
-      const idx = r * CONFIG.cols + c + 1;
+    const count = r < CONFIG.rows - 1 ? cols : lastRowCount;
+    for (let c = 0; c < count; c++) {
+      const idx = r * cols + c + 1;
       const cell = row.addStack();
-      cell.size = new Size(size, size);
-      const done =
-        idx <= totalDays &&
-        dates.includes(formatDate(new Date(year, month - 1, idx)));
+      cell.size = new Size(cellSize, cellSize);
+      const done = dates.includes(formatDate(new Date(year, month - 1, idx)));
       cell.backgroundColor = done ? new Color("#4CD964") : new Color("#E5E5EA");
       cell.cornerRadius = CONFIG.cornerRadius;
-      if (c < CONFIG.cols - 1) row.addSpacer(CONFIG.spacing);
+      if (c < count - 1) row.addSpacer(CONFIG.spacing);
     }
     if (r < CONFIG.rows - 1) widget.addSpacer(CONFIG.spacing);
   }
@@ -159,48 +140,46 @@ function createWidget(habit, dates, theme) {
   return widget;
 }
 
-// --- Main Execution ------------------------------------------------------
-if (config.runsInApp) {
+async function runApp() {
   const theme = await ensureTheme();
   const habit = await ensureHabit();
-  if (!theme || !habit) return Script.complete();
+  if (!theme || !habit) {
+    Script.complete();
+    return;
+  }
 
-  // Main menu
   const action = await promptChoice(habit, null, ["Check-in", "Settings"]);
-  const dates = loadDates();
+  let dates = loadDates();
 
   if (action === "Check-in") {
     const today = formatDate(new Date());
-    const idx = dates.indexOf(today);
-    if (idx >= 0) dates.splice(idx, 1);
+    const i = dates.indexOf(today);
+    if (i >= 0) dates.splice(i, 1);
     else dates.push(today);
     saveDates(dates);
-    const alert = new Alert();
-    alert.title = habit;
-    alert.message =
-      idx >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
-    alert.addAction("OK");
-    await alert.presentAlert();
+    const a = new Alert();
+    a.title = habit;
+    a.message = i >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
+    a.addAction("OK");
+    await a.presentAlert();
   } else if (action === "Settings") {
     const choice = await promptChoice("Settings", null, [
       "Change Theme",
       "Change Habit",
       "Reset Data",
     ]);
-    if (choice === "Change Theme") {
-      const newTheme = await promptForTheme();
-      if (newTheme) saveKey("theme", newTheme);
-    } else if (choice === "Change Habit") {
-      const newHabit = await promptForHabit();
-      if (newHabit) saveKey("habit", newHabit);
-    } else if (choice === "Reset Data") {
-      await resetData();
-    }
+    if (choice === "Change Theme") await ensureTheme();
+    else if (choice === "Change Habit") await ensureHabit();
+    else if (choice === "Reset Data") saveDates([]);
   }
 
-  const widget = createWidget(habit, loadDates(), theme);
-  await widget.presentMedium();
+  const w = createWidget(habit, dates, theme);
+  await w.presentMedium();
   Script.complete();
+}
+
+if (config.runsInApp) {
+  await runApp();
 } else {
   const theme = loadKey("theme") || "light";
   const habit = loadKey("habit") || "habit";

@@ -1,19 +1,8 @@
-# Single Habit Tracker for Scriptable
+# Minimalist Habit Tracker for Scriptable
 
-A customizable medium-sized iOS widget (using Scriptable) to track a single daily habit in a GitHub-like 3×12 grid. Offers theme selection (dark/light) and stores data in Keychain.
+## Project Description
 
----
-
-## Features
-
-- **Interactive Setup**: First run prompts for:
-  - Theme: Dark (`#242424` background, white text) or Light (`#FFFFFF` background, black text).
-  - Habit name (stored and displayed in lowercase).
-- **Daily Check-In**: Tap the widget, then confirm to add/remove today’s date.
-- **GitHub-Style Grid**: 3 rows × 12 columns of squares representing days 1–31.
-- **Responsive Layout**: Squares auto-size to fill the medium widget width (≈364pt).
-- **Rounded Corners**: Lightly rounded squares (4pt radius).
-- **Persistent Storage**: Theme, habit name, and dates saved in iOS Keychain.
+Minimalist Habit Tracker is an iOS widget script built with Scriptable that enables you to set up, customize, and track a single daily habit using a GitHub-style 3×12 grid interface. Featuring theme selection, interactive daily check-ins, and secure storage via Keychain, it's a lightweight and flexible solution to visualize your habit progress directly on your home screen.
 
 ---
 
@@ -37,35 +26,34 @@ A customizable medium-sized iOS widget (using Scriptable) to track a single dail
 ## Usage
 
 1. **First Launch** (in-app):
-   - Choose your **theme** (Dark or Light).
-   - Enter your **habit name** (lowercase only).
-2. **Daily Check-In**:
-   - Tap the widget → Scriptable opens → confirms theme/habit (if already set), then toggles today’s entry.
-   - A confirmation alert indicates "✅ Added today's entry" or "❌ Removed today's entry".
+   - Choose your **theme** and enter your **habit name**.
+2. **In-App Menu**:
+   - **Check-in**: toggle today's entry.
+   - **Settings**: change theme, change habit, or reset all tracked data.
 3. **Home Screen**:
-   - The medium widget displays the habit name and a 3×12 grid:
-     - **Green** squares: days you checked in.
-     - **Gray** squares: days not yet checked in or beyond current month.
+   - Medium widget displays habit name and 3×12 grid:
+     - **Green** squares: days checked in.
+     - **Gray** squares: days not checked or beyond current month.
 
 ---
 
-## Configuration
+## Screenshots
 
-You can customize:
+![Light Theme Example](path/to/light-theme.png)  
+Light theme displaying the habit grid.
 
-- **Padding, spacing, rows, columns** by editing constants at the top of the script (`PADDING`, `SPACING`, `ROWS`, `COLS`).
-- **Corner radius** (`CORNER_RADIUS`).
-- **Key names** (`THEME_KEY`, `HABIT_KEY`, `STORAGE_KEY`).
+![Dark Theme Example](path/to/dark-theme.png)  
+Dark theme displaying the habit grid.
 
 ---
 
 ## Contributing
 
-Feel free to open issues or submit pull requests:
+Contributions are welcome! For major changes, please open an issue or submit a pull request:
 
-1. Fork the repository or create a copy of the script.
-2. Make your changes.
-3. Submit a PR or share the updated script.
+1. Fork the script or create a copy.
+2. Make your improvements.
+3. Share via PR or gist.
 
 ---
 
