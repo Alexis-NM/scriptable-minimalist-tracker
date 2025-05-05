@@ -1,5 +1,5 @@
 /*
- * Single Habit Tracker for Scriptable
+ * Refactored Single Habit Tracker for Scriptable
  * Interactive settings and daily check-in with a dynamic 3×N grid per month.
  */
 
@@ -54,14 +54,13 @@ async function promptInput(title, placeholder) {
 async function ensureTheme() {
   let theme = loadKey("theme");
   if (!theme) {
-    const choice = await promptChoice(
-      "Choose theme",
-      "Select dark or light mode",
-      ["dark", "light"]
-    );
+    const choice = await promptChoice("Choose theme", null, [
+      "🕶️ Dark",
+      "💡 Light",
+    ]);
     if (choice) {
-      saveKey("theme", choice);
-      theme = choice;
+      theme = choice.startsWith("🕶️") ? "dark" : "light";
+      saveKey("theme", theme);
     }
   }
   return theme;
@@ -71,8 +70,8 @@ async function ensureHabit() {
   if (!habit) {
     const name = await promptInput("What do you want to track?", "habit name");
     if (name) {
-      saveKey("habit", name.toLowerCase());
       habit = name.toLowerCase();
+      saveKey("habit", habit);
     }
   }
   return habit;
@@ -113,7 +112,6 @@ function createWidget(habit, dates, theme) {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const totalDays = daysInMonth(month, year);
-
   const cols = Math.ceil(totalDays / CONFIG.rows);
   const lastRowCount = totalDays - (CONFIG.rows - 1) * cols;
   const cellSize = Math.floor(
@@ -126,51 +124,79 @@ function createWidget(habit, dates, theme) {
     row.layoutHorizontally();
     const count = r < CONFIG.rows - 1 ? cols : lastRowCount;
     for (let c = 0; c < count; c++) {
-      const idx = r * cols + c + 1;
+      const day = r * cols + c + 1;
       const cell = row.addStack();
       cell.size = new Size(cellSize, cellSize);
-      const done = dates.includes(formatDate(new Date(year, month - 1, idx)));
+      const done = dates.includes(formatDate(new Date(year, month - 1, day)));
       cell.backgroundColor = done ? new Color("#4CD964") : new Color("#E5E5EA");
       cell.cornerRadius = CONFIG.cornerRadius;
       if (c < count - 1) row.addSpacer(CONFIG.spacing);
     }
     if (r < CONFIG.rows - 1) widget.addSpacer(CONFIG.spacing);
   }
-
   return widget;
 }
 
 async function runApp() {
-  const theme = await ensureTheme();
-  const habit = await ensureHabit();
+  let theme = await ensureTheme();
+  let habit = await ensureHabit();
   if (!theme || !habit) {
     Script.complete();
     return;
   }
 
-  const action = await promptChoice(habit, null, ["Check-in", "Settings"]);
+  const action = await promptChoice(habit, null, [
+    "☑️ Check-in",
+    "⚙️ Settings",
+  ]);
   let dates = loadDates();
 
-  if (action === "Check-in") {
+  if (action === "☑️ Check-in") {
     const today = formatDate(new Date());
-    const i = dates.indexOf(today);
-    if (i >= 0) dates.splice(i, 1);
+    const idx = dates.indexOf(today);
+    if (idx >= 0) dates.splice(idx, 1);
     else dates.push(today);
     saveDates(dates);
     const a = new Alert();
     a.title = habit;
-    a.message = i >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
+    a.message =
+      idx >= 0 ? "❌ Removed today's entry" : "✅ Added today's entry";
     a.addAction("OK");
     await a.presentAlert();
-  } else if (action === "Settings") {
-    const choice = await promptChoice("Settings", null, [
-      "Change Theme",
-      "Change Habit",
-      "Reset Data",
-    ]);
-    if (choice === "Change Theme") await ensureTheme();
-    else if (choice === "Change Habit") await ensureHabit();
-    else if (choice === "Reset Data") saveDates([]);
+  } else if (action === "⚙️ Settings") {
+    let open = true;
+    while (open) {
+      const choice = await promptChoice("⚙️ Settings", null, [
+        "🕶️ Change Theme",
+        "✏️ Change Habit",
+        "🔄 Reset Data",
+        "⬅️ Back",
+      ]);
+      if (choice === "🕶️ Change Theme") {
+        const newTheme = await promptChoice("Choose theme", null, [
+          "🕶️ Dark",
+          "💡 Light",
+        ]);
+        if (newTheme) {
+          theme = newTheme.startsWith("🕶️") ? "dark" : "light";
+          saveKey("theme", theme);
+        }
+      } else if (choice === "✏️ Change Habit") {
+        const newHabit = await promptInput(
+          "What do you want to track?",
+          "habit name"
+        );
+        if (newHabit) {
+          habit = newHabit.toLowerCase();
+          saveKey("habit", habit);
+        }
+      } else if (choice === "🔄 Reset Data") {
+        dates = [];
+        saveDates(dates);
+      } else {
+        open = false;
+      }
+    }
   }
 
   const w = createWidget(habit, dates, theme);
