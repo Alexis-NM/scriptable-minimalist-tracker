@@ -164,38 +164,32 @@ async function runApp() {
     a.addAction("OK");
     await a.presentAlert();
   } else if (action === "⚙️ Settings") {
-    let open = true;
-    while (open) {
-      const choice = await promptChoice("⚙️ Settings", null, [
-        "🕶️ Change Theme",
-        "✏️ Change Habit",
-        "🔄 Reset Data",
-        "⬅️ Back",
+    const choice = await promptChoice("⚙️ Settings", null, [
+      "🕶️ Change Theme",
+      "✏️ Change Habit",
+      "🔄 Reset Data",
+    ]);
+    if (choice === "🕶️ Change Theme") {
+      const newTheme = await promptChoice("Choose theme", null, [
+        "🕶️ Dark",
+        "💡 Light",
       ]);
-      if (choice === "🕶️ Change Theme") {
-        const newTheme = await promptChoice("Choose theme", null, [
-          "🕶️ Dark",
-          "💡 Light",
-        ]);
-        if (newTheme) {
-          theme = newTheme.startsWith("🕶️") ? "dark" : "light";
-          saveKey("theme", theme);
-        }
-      } else if (choice === "✏️ Change Habit") {
-        const newHabit = await promptInput(
-          "What do you want to track?",
-          "habit name"
-        );
-        if (newHabit) {
-          habit = newHabit.toLowerCase();
-          saveKey("habit", habit);
-        }
-      } else if (choice === "🔄 Reset Data") {
-        dates = [];
-        saveDates(dates);
-      } else {
-        open = false;
+      if (newTheme) {
+        theme = newTheme.startsWith("🕶️") ? "dark" : "light";
+        saveKey("theme", theme);
       }
+    } else if (choice === "✏️ Change Habit") {
+      const newHabit = await promptInput(
+        "What do you want to track?",
+        "habit name"
+      );
+      if (newHabit) {
+        habit = newHabit.toLowerCase();
+        saveKey("habit", habit);
+      }
+    } else if (choice === "🔄 Reset Data") {
+      dates = [];
+      saveDates(dates);
     }
   }
 
