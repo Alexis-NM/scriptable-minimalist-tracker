@@ -1,6 +1,7 @@
 /*
- * Refactored Single Habit Tracker for Scriptable
+ * Single Habit Tracker for Scriptable
  * Interactive settings and daily check-in with a dynamic 3×N grid per month.
+ * You can adjust the width, rows, and other parameters in the CONFIG object.
  */
 
 const KEYS = {
@@ -8,12 +9,15 @@ const KEYS = {
   habit: "habitTrackerName",
   dates: "singleHabitTrackerDates",
 };
+
+//iPhone 13 mini size
 const CONFIG = {
   padding: 8,
+  leftMargin: 2,
   spacing: 3,
   rows: 3,
   cornerRadius: 4,
-  widgetWidth: 364,
+  widgetWidth: 342,
 };
 
 function loadKey(name) {
@@ -29,7 +33,14 @@ function saveKey(name, value) {
   } catch {}
 }
 
-const formatDate = (date) => date.toISOString().slice(0, 10);
+// Génère "YYYY-MM-DD" en heure locale pour éviter le décalage UTC
+function formatDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 const daysInMonth = (month, year) => new Date(year, month, 0).getDate();
 
 async function promptChoice(title, message, options) {
@@ -95,7 +106,7 @@ function createWidget(habit, dates, theme) {
   const widget = new ListWidget();
   widget.setPadding(
     CONFIG.padding,
-    CONFIG.padding + 3,
+    CONFIG.padding + CONFIG.leftMargin,
     CONFIG.padding,
     CONFIG.padding
   );
@@ -157,6 +168,7 @@ async function runApp() {
     if (idx >= 0) dates.splice(idx, 1);
     else dates.push(today);
     saveDates(dates);
+
     const a = new Alert();
     a.title = habit;
     a.message =
