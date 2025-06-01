@@ -1,43 +1,58 @@
-# Minimalist Habit Tracker for Scriptable
+## Minimalist Habit & Countdown Widgets for Scriptable
 
-## Project Description
+Two lightweight iOS widgets built with Scriptable:
 
-Minimalist Habit Tracker is an iOS widget script built with Scriptable that enables you to set up, customize, and track a single daily habit using a GitHub-style 3×12 grid interface. Featuring theme selection, interactive daily check-ins, and secure storage via Keychain, it's a lightweight and flexible solution to visualize your habit progress directly on your home screen.
+1. **Habit Tracker** – Track a single daily habit with a 3×N grid.  
+2. **Countdown Tracker** – Show a “D-X” countdown and progress grid toward a target date.  
 
----
-
-## Requirements
-
-- iOS device with Scriptable installed (https://scriptable.app).
-- iOS 14 or later for widgets.
+Both scripts run as Medium-sized home-screen widgets.
 
 ---
 
-## Installation
+### Requirements
 
-1. **Open Scriptable** and create a new script.
-2. **Copy & paste** the contents of `habit_tracker.js` into the new script.
-3. **Save** the script (e.g., name it `HabitTracker`).
-4. On your home screen, **add a Scriptable widget** of size **Medium**.
-5. In the widget configuration, select your `HabitTracker` script.
+- **iOS 14 or later**  
+- **Scriptable** app installed  
+- A **Medium-sized Scriptable widget** slot on your home screen  
 
 ---
 
-## Usage
+### Installation
 
-1. **First Launch** (in-app):
-   - Choose your **theme** and enter your **habit name**.
-2. **In-App Menu**:
-   - **Check-in**: toggle today's entry.
-   - **Settings**: change theme, change habit, or reset all tracked data.
-3. **Home Screen**:
-   - Medium widget displays habit name and 3×12 grid:
-     - **Green** squares: days checked in.
-     - **Gray** squares: days not checked or beyond current month.
+1. **Open Scriptable** on your iPhone/iPad.  
+2. **Create a new script** (give it a clear name, e.g. `HabitTracker.js` or `CountdownTracker.js`).  
+3. **Copy & paste** the corresponding code (from this repo) into that new script and **Save**.  
+4. On your home screen, **add a Scriptable widget** of size **Medium**, then select the script you just created.  
+
+Once installed, run each script one time **inside Scriptable** to configure it. After that, the home-screen widget updates automatically each day.
 
 ---
 
-## Screenshots
+## 1. Habit Tracker
+
+#### Overview
+
+- **First run** (inside Scriptable) prompts you to choose:
+  - **Theme** (🕶️ Dark or 💡 Light)  
+  - **Habit name** (e.g., “Meditate”)  
+- Stores your check-in dates securely in Keychain under `habitTrackerTheme`, `habitTrackerName`, and `singleHabitTrackerDates`.  
+- Renders a 3×N grid representing the **current month** on the widget:
+  - 🟩 Green squares = days you checked in  
+  - ⬜ Gray squares = days you didn’t check in or days outside the month  
+
+From then on:
+
+- **Tap the script inside Scriptable** to open a menu:
+  - **☑️ Check-in** toggles today’s entry (adds/removes today’s date).  
+  - **⚙️ Settings** lets you:
+    - Change theme  
+    - Change habit name  
+    - Reset all data (clears every saved date)  
+- The home-screen widget displays your habit name + the updated monthly grid automatically.
+
+---
+
+### Screenshots
 
 ![Light Theme Example](screenshots/light_tracker.jpg)  
 Light theme displaying the habit grid.
@@ -47,16 +62,52 @@ Dark theme displaying the habit grid.
 
 ---
 
-## Contributing
+## 2. Countdown Tracker
 
-Contributions are welcome! For major changes, please open an issue or submit a pull request:
+#### Overview
 
-1. Fork the script or create a copy.
-2. Make your improvements.
-3. Share via PR or gist.
+- **First run** (inside Scriptable) prompts you to enter:
+  - **Theme** (🕶️ Dark or 💡 Light)  
+  - **Widget title** (e.g., “Trip to Japan”)  
+  - **Target date** in `YYYY-MM-DD` format (e.g., `2025-12-31`)  
+- Records your **install date** (today) in Keychain under `countdownInstallDate`.  
+- Calculates:
+  - **totalDays** = days from install date to target date (inclusive)  
+  - **elapsed** = days since install (today − install date)  
+  - **remaining** = totalDays − elapsed  
+- Displays on the widget:
+  1. Your custom **title** (e.g., “Trip to Japan”)  
+  2. A **“D-X”** label where **X** = days remaining (counting today as day 0)  
+  3. A 3×N grid:
+     - 🟧 Orange squares = days already elapsed  
+     - ⬜ Gray squares = days left until target  
+
+After configuration, the home-screen widget automatically refreshes the countdown daily.
+
+#### Re-configuring
+
+To change title or target date later:
+
+1. In Scriptable, go to **Settings → Keychain**.  
+2. Delete these four keys:
+   - `countdownTheme`  
+   - `countdownTitle`  
+   - `countdownTargetDate`  
+   - `countdownInstallDate`  
+3. Next time you run the script inside Scriptable, you’ll be prompted again for theme, title, and date.
+
+---
+
+## Customization
+
+- Both scripts store settings in Keychain under unique keys.  
+- Edit the `CONFIG` object at the top of each script to adjust:
+  - `padding`, `spacing`, `cornerRadius`, and number of `rows`  
+  - The widget’s total width (`widgetWidth`) if your device differs  
+- To change the “checked”/“elapsed” and “unchecked”/“remaining” colors, modify the hex codes in the `createWidget(...)` function of each script.
 
 ---
 
 ## License
 
-This project is released under the [MIT License](LICENSE).
+Released under the **MIT License**. See `LICENSE` for details.
